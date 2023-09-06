@@ -11,9 +11,7 @@ const GptForm = () => {
   const [abortController, setAbortController] = useState(null);
   const [scrollStatus, setScrollStatus] = useState(false);
   const [initialMessages, setInitialMessages] = useState([]);
-  const [apiKey, setApiKey] = useState("");
-  const [apiStatus, setApiStatus] = useState(false);
-  const [Status, setStatus] = useState("");
+
   useEffect(() => {
     const retrieveMessages = async () => {
       const storedMessages = await JSON.parse(
@@ -24,11 +22,7 @@ const GptForm = () => {
     };
     retrieveMessages();
   }, []);
-  useEffect(() => {
-    localStorage.getItem("apiKey") &&
-      handleApiKey &&
-      setApiKey(localStorage.getItem("apiKey"));
-  }, []);
+
   useEffect(() => {
     window.scrollTo(0, document.body.scrollHeight);
   }, [initialMessages]);
@@ -76,7 +70,7 @@ const GptForm = () => {
         body: JSON.stringify({
           prompt,
           messagesArray: serverMessagesArray,
-          api: apiKey,
+          
         }),
       });
       setPrompt("");
@@ -138,59 +132,10 @@ const GptForm = () => {
       localStorage.removeItem("messages");
     }
   };
-  const handleApiChange = (e) => {
-    setApiKey(e.target.value);
-  };
-  const handleApiKey = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
 
-          "Authorization": `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo-16k",
-          messages: [{ role: "user", content: "hello" }],
-        }),
-      });
-      if (res.ok) {
-        console.log("success");
-        const data = await res.json();
-        setApiStatus(true);
-        localStorage.setItem("apiKey", apiKey);
-        console.log(data);
-        setStatus("success");
-        setApiKey(apiKey);
-        return;
-      } else {
-        console.log(res.error);
-      }
-    } catch (error) {
-      console.log(error);
-      setStatus("Invalid API ");
-    }
-  };
 
   return (
-    <>
-      {!apiKey || apiStatus === false ? (
-        <div className="flex flex-col items-center justify-center">
-          <form onSubmit={handleApiKey}>
-            <input
-              type="text"
-              value={apiKey}
-              placeholder="Enter ChatGPT API"
-              onChange={handleApiChange}
-              className="p-2 rounded bg-slate-900"
-            />
-            <button type="submit">Submit</button>
-          </form>
-          <p> {Status} </p>
-        </div>
-      ) : (
+   
         <div
           className="flex flex-col pt-10 max-w-[60vw] mx-auto min-h-screen"
           ref={messagesContainerRef}>
@@ -243,8 +188,7 @@ const GptForm = () => {
             </form>
           </div>
         </div>
-      )}
-    </>
+     
   );
 };
 

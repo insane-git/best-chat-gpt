@@ -5,9 +5,7 @@
   "scripts": {
     "dev": "next dev ",
     "build": "next build",
-    "start": "npx serve@latest out",
-    "bust": "npm run build && npm run export",
-    "export": "next export",
+    "start": "next start",    
     "lint": "next lint"
   },
   "dependencies": {

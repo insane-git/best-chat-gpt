@@ -30,11 +30,17 @@ const GptForm = () => {
       });
     }
   });
+  // const isComputer = window.matchMedia("(min-width: 1068px)").matches;
+  // useEffect(() => {
+  //   if (!isComputer && scrollStatus) {
+  //     window.scrollTo(0, document.body.scrollHeight);
+  //   }
+  // }, [document.documentElement.scrollHeight]);
   useEffect(() => {
-    if (scrollStatus) {
+    if (scrollStatus && scrollStatus === true) {
       window.scrollTo(0, document.body.scrollHeight);
     }
-  });
+  }, [messages]);
   useEffect(() => {
     const retrieveMessages = async () => {
       const storedMessages = await JSON.parse(
@@ -86,14 +92,6 @@ const GptForm = () => {
         done = doneReading;
         const chunk = decoder.decode(value);
         responseData += chunk;
-
-        // setMessages((prevMessages) => [
-        //   ...prevMessages.slice(0, -1),
-        //   {
-        //     role: "assistant",
-        //     content: prevMessages[prevMessages.length - 1].content + chunk,
-        //   },
-        // ]);
         setMessages((prevMessages) => {
           const updatedMessages = [...prevMessages];
           updatedMessages[updatedMessages.length - 1].content += chunk;
@@ -109,7 +107,6 @@ const GptForm = () => {
     } catch (error) {
       console.error("Error:", error);
     } finally {
-      // Clear the input field and focus on it after submission
       setMessage({ ...message, prompt: "" });
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -129,7 +126,6 @@ const GptForm = () => {
   const handleCancel = () => {
     if (abortController) {
       abortController.abort();
-
       localStorage.setItem("messages", JSON.stringify([...messages]));
     }
     setAbortController(null);
@@ -181,14 +177,19 @@ const GptForm = () => {
   return (
     <div ref={containerRef}>
       <div className="flex flex-col min-h-screen pt-10 mx-auto">
-        <div className="flex flex-col justify-end flex-1 mb-32 w-[80vw] mx-auto overflow-y-auto">
+        <div className="flex flex-col justify-end flex-1 mb-32 w-[90vw] mx-auto overflow-y-auto">
           {messages?.map((message, index) => (
             <div key={index}>
               {message?.role === "user" && (
                 <div className="w-full p-2 rounded bg-slate-700">
-                  <p className="flex items-center">
-                    <FaUserAlt className="mx-1" /> : {message.content}
-                  </p>
+                  <pre
+                    className="flex items-center"
+                    style={{
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                    }}>
+                    <FaUserAlt className="mx-1" /> {message.content}
+                  </pre>
                 </div>
               )}
               {message?.role === "assistant" && (
@@ -196,10 +197,15 @@ const GptForm = () => {
                   {message.content.split("```").map((part, index) => {
                     if (index % 2 === 0) {
                       return (
-                        <div className="w-[80%] px-2 py-4" key={index}>
-                          {part.split("\n").map((line, index) => (
-                            <p key={index}>{line}</p>
-                          ))}
+                        <div className="px-2 py-4 " key={index}>
+                          <pre
+                            key={index}
+                            style={{
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                            }}>
+                            {part}
+                          </pre>
                         </div>
                       );
                     } else {
@@ -209,7 +215,12 @@ const GptForm = () => {
                         <div
                           className="relative px-4 py-4 text-white bg-black rounded-lg"
                           key={index}>
-                          <pre ref={(el) => (codeBlocks.current[index] = el)}>
+                          <pre
+                            ref={(el) => (codeBlocks.current[index] = el)}
+                            style={{
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                            }}>
                             {codeContent}
                           </pre>
                           <button
@@ -236,23 +247,29 @@ const GptForm = () => {
             }}>
             <form
               onSubmit={handleSubmit}
-              className="flex items-center justify-center w-full">
+              className="flex items-center justify-center w-full max-md:flex-col">
               <button
                 type="button"
                 className="p-1 transition-all rounded w-28 hover:bg-red-500"
                 onClick={handleDelete}>
                 Clear Chat
               </button>
-              <div className="flex items-center justify-center w-full">
+              <div className="flex items-center justify-center w-full max-sm:flex-col">
                 <textarea
                   value={message.prompt}
                   required
                   ref={textareaRef}
                   name="prompt"
                   rows={!message.prompt && 1}
-                  placeholder="Type your message here..."
-                  className="w-full p-2 transition-all rounded resize-none bg-slate-900"
-                  style={{ maxHeight: "300px", height: "auto" }}
+                  placeholder="Type message here..."
+                  className="w-full p-2 transition-all rounded resize-none bg-slate-900 "
+                  style={{
+                    "maxHeight": "300px",
+                    "height": "auto",
+                    "@media (max-width: 300px)": {
+                      minHeight: "200px",
+                    },
+                  }}
                   onChange={handleMessageChange}
                   onInput={(e) => {
                     e.target.rows = 1;

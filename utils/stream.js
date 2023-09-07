@@ -16,7 +16,7 @@ export async function OpenAIStream(payload) {
     },
     body: JSON.stringify(payload),
   });
-
+  if (!res.ok) console.log(res);
   let counter = 0;
 
   const stream = new ReadableStream({

@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { FaCaretDown, FaUserAlt } from "react-icons/fa";
+import { AiOutlineArrowRight } from "react-icons/ai";
+import { BiSquareRounded } from "react-icons/bi";
+import { ImCross } from "react-icons/im";
 const GptForm = () => {
   const [message, setMessage] = useState({
     prompt: "",
@@ -14,7 +17,7 @@ const GptForm = () => {
   const containerRef = useRef(null);
   const codeBlocks = useRef([]);
   const [abortController, setAbortController] = useState(null);
-
+  const textarea = textareaRef?.current;
   const [submitStatus, setSubmitStatus] = useState(false);
   useEffect(() => {
     if (document && typeof document !== "undefined") {
@@ -30,12 +33,7 @@ const GptForm = () => {
       });
     }
   });
-  // const isComputer = window.matchMedia("(min-width: 1068px)").matches;
-  // useEffect(() => {
-  //   if (!isComputer && scrollStatus) {
-  //     window.scrollTo(0, document.body.scrollHeight);
-  //   }
-  // }, [document.documentElement.scrollHeight]);
+
   useEffect(() => {
     if (scrollStatus && scrollStatus === true) {
       window.scrollTo(0, document.body.scrollHeight);
@@ -53,6 +51,8 @@ const GptForm = () => {
   }, []);
   useEffect(() => {
     window.scrollTo(0, document.body.scrollHeight);
+
+    textarea?.focus();
   }, [initialMessages]);
 
   const handleSubmit = async (e) => {
@@ -68,6 +68,10 @@ const GptForm = () => {
           content: "",
         },
       ]);
+      setMessage({ prompt: "" });
+
+      textarea.style.height = "40px";
+
       const controller = new AbortController();
       setAbortController(controller);
       const res = await fetch("/api/response", {
@@ -81,7 +85,6 @@ const GptForm = () => {
           messagesArray: messages,
         }),
       });
-      setMessage({ prompt: "" });
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let done = false;
@@ -107,12 +110,11 @@ const GptForm = () => {
     } catch (error) {
       console.error("Error:", error);
     } finally {
+      adjustTextareaHeight(textarea);
       setMessage({ ...message, prompt: "" });
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-      }
       setSubmitStatus(false);
       setAbortController(null);
+      textarea?.focus();
     }
   };
   useEffect(() => {
@@ -132,6 +134,8 @@ const GptForm = () => {
   };
   const handleMessageChange = (e) => {
     setMessage({ ...message, [e.target.name]: e.target.value });
+    const textarea = textareaRef.current;
+    adjustTextareaHeight(textarea);
   };
 
   const handleCopyClick = (index) => {
@@ -163,7 +167,7 @@ const GptForm = () => {
     return () => clearTimeout(timeout);
   }, [copyStatus]);
   const handleDelete = () => {
-    if (confirm("Are you sure?")) {
+    if (confirm("Delete Chat?")) {
       setMessages([]);
       localStorage.removeItem("messages");
     }
@@ -174,6 +178,25 @@ const GptForm = () => {
       block: "end",
     });
   };
+  const handleTextareaKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      handleSubmit(e);
+    }
+  };
+
+  const adjustTextareaHeight = (textarea) => {
+    const minHeight = 40;
+    const maxHeight = 300;
+
+    textarea.style.height = "40px"; // Reset the height to auto
+    const newHeight = Math.min(
+      maxHeight,
+      Math.max(minHeight, textarea.scrollHeight)
+    );
+
+    textarea.style.height = newHeight + "px"; // Set the new height
+  };
+
   return (
     <div ref={containerRef}>
       <div className="flex flex-col min-h-screen pt-10 mx-auto">
@@ -238,46 +261,26 @@ const GptForm = () => {
           ))}
         </div>
 
-        <div className="fixed bottom-0 flex items-center justify-center w-full mx-auto bg-black bg-opacity-50 min-h-20 ">
-          <div
-            className="flex items-center justify-center p-4 max-md:flex-col"
-            style={{
-              margin: "0 auto",
-              width: "80%",
-            }}>
+        <div className="fixed bottom-0 flex items-center justify-center w-full mx-auto bg-black bg-opacity-50 ">
+          <div className="flex items-center justify-center p-2 max-md:flex-col w-[80%] mx-auto max-md:w-full">
             <form
               onSubmit={handleSubmit}
               className="flex items-center justify-center w-full max-md:flex-col">
-              <button
-                type="button"
-                className="p-1 transition-all rounded w-28 hover:bg-red-500"
-                onClick={handleDelete}>
-                Clear Chat
-              </button>
-              <div className="flex items-center justify-center w-full max-sm:flex-col">
+              <div className="flex items-center justify-center w-full p-1 rounded focus-within:border bg-slate-900">
                 <textarea
                   value={message.prompt}
                   required
                   ref={textareaRef}
                   name="prompt"
-                  rows={!message.prompt && 1}
-                  placeholder="Type message here..."
-                  className="w-full p-2 transition-all rounded resize-none bg-slate-900 "
+                  placeholder={submitStatus ? "Loading..." : "Ask a question"}
+                  className="w-full px-1 py-2 mb-2 transition-all rounded outline-none resize-none bg-slate-900"
                   style={{
-                    "maxHeight": "300px",
-                    "height": "auto",
-                    "@media (max-width: 300px)": {
-                      minHeight: "200px",
-                    },
+                    minHeight: "40px",
+                    maxHeight: "300px",
+                    height: `${!message.prompt ? "40px" : "auto"}`,
                   }}
                   onChange={handleMessageChange}
-                  onInput={(e) => {
-                    e.target.rows = 1;
-                    e.target.rows = Math.min(
-                      5,
-                      Math.ceil((e.target.scrollHeight - 16) / 20)
-                    );
-                  }}
+                  onKeyDown={handleTextareaKeyDown}
                 />
 
                 {abortController ? (
@@ -286,14 +289,17 @@ const GptForm = () => {
                     type="button"
                     onClick={handleCancel}
                     className="p-2 mx-1 text-white transition-all bg-red-600 rounded ">
-                    Cancel
+                    <BiSquareRounded />
                   </button>
                 ) : (
                   <button
                     disabled={!message.prompt}
                     type="submit"
-                    className="flex flex-col items-center justify-center h-8 p-2 mx-1 text-center transition-all rounded bg-slate-900 disabled:bg-slate-700">
-                    Submit
+                    className="h-8 p-2 mx-1 text-center transition-all rounded bg-slate-800 disabled:bg-slate-800 disabled:cursor-not-allowed"
+                    style={{
+                      height: `${textareaRef?.current?.height}`,
+                    }}>
+                    <AiOutlineArrowRight />
                   </button>
                 )}
               </div>
@@ -303,7 +309,17 @@ const GptForm = () => {
       </div>
       <div className="absolute">
         <button
-          className={`fixed bottom-20 right-5 p-3 bg-slate-600  transition-all duration-300 z-50 rounded-full  ${
+          className={`fixed bottom-24 left-5 p-3 bg-slate-900  transition-all duration-300 z-50 rounded-full ${
+            messages?.length === 0 && "hidden"
+          } `}
+          onClick={handleDelete}
+          title="Delete chat">
+          <ImCross />
+        </button>
+      </div>
+      <div className="absolute">
+        <button
+          className={`fixed bottom-24 right-5 p-3 bg-slate-600  transition-all duration-300 z-50 rounded-full  ${
             scrollStatus && "hidden"
           }`}
           onClick={scrollToBottom}

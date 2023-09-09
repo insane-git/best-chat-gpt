@@ -227,7 +227,19 @@ const GptForm = () => {
                               whiteSpace: "pre-wrap",
                               wordBreak: "break-word",
                             }}>
-                            {part}
+                            {part.split("**").map((textPart, textIndex) => {
+                              if (textIndex % 2 === 0) {
+                                return textPart;
+                              } else {
+                                return (
+                                  <strong
+                                    key={textIndex}
+                                    className="first-letter:capitalize">
+                                    {textPart}
+                                  </strong>
+                                );
+                              }
+                            })}{" "}
                           </pre>
                         </div>
                       );

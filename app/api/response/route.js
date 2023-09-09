@@ -28,7 +28,7 @@ export const POST = async (req) => {
     top_p: 1,
     frequency_penalty: 1,
     presence_penalty: 0,
-    max_tokens: 10000,
+    max_tokens: 14000,
     stream: true,
     n: 1,
   };

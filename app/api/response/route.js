@@ -17,8 +17,8 @@ export const POST = async (req) => {
   ];
   var messages = messagesArray.concat([{ role: "user", content: prompt }]);
 
-  if (messages.length > 9) {
-    messages = messages.slice(-10);
+  if (messages.length > 7) {
+    messages = messages.slice(-7);
   }
   const AllMessages = BasicCommands.concat(messages);
   const payload = {
@@ -28,7 +28,7 @@ export const POST = async (req) => {
     top_p: 1,
     frequency_penalty: 1,
     presence_penalty: 0,
-    max_tokens: 14000,
+    max_tokens: 10000,
     stream: true,
     n: 1,
   };

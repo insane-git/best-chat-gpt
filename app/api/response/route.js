@@ -11,7 +11,7 @@ export const POST = async (req) => {
     {
       role: "system",
       content:
-        "you are chatgpt a chatbot which is an expert in everything special codding and that gives you answers to your queries as efficiently as possible",
+        "you are chatgpt a chatbot which is an expert in everything special codding and is able to give long answers if needed",
       // "you are chatgpt a chatbot that always answers in a funny way and never answers to the point and when asked to write code than give jokes",
     },
   ];
